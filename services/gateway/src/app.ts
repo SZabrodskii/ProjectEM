@@ -1,41 +1,67 @@
-import Fastify from 'fastify';
-import FastifySwagger from '@fastify/swagger';
+import Fastify, { FastifyRequest, FastifyReply, FastifyError } from 'fastify';
+import amqplib from 'amqplib';
 
 const fastify = Fastify({
     logger: true,
 });
 
-fastify.register(FastifySwagger, {
-    routePrefix: '/docs',
-    swagger: {
-        info: {
-            title: 'Gateway API',
-            description: 'Gateway service documentation',
-            version: '0.1.0',
-        },
-        tags: [
-            { name: 'example', description: 'Example endpoint' },
-        ],
-        schemes: ['http'],
-    },
-    exposeRoute: true,
-});
+let channel: amqplib.Channel;
+
+const connectRabbitMQ = async () => {
+    try {
+        fastify.log.info('Attempting to connect to RabbitMQ...');
+        const connection = await amqplib.connect('amqp://rabbitmq:5672');
+        fastify.log.info('Connected to RabbitMQ successfully.');
+        channel = await connection.createChannel();
+        await channel.assertQueue('action-history', { durable: false });
+        fastify.log.info('Queue assertion successful.');
+    } catch (error) {
+        if (error instanceof Error) {
+            fastify.log.error('Failed to connect to RabbitMQ:', error.message);
+        } else {
+            fastify.log.error('Failed to connect to RabbitMQ:', 'Unknown error');
+        }
+    }
+};
 
 fastify.get('/api/example', async (request, reply) => {
+    if (!channel) {
+        fastify.log.error('RabbitMQ channel is not initialized.');
+        return reply.status(500).send({ error: 'Internal Server Error' });
+    }
+
+    const message = 'Product action triggered';
+    channel.sendToQueue('action-history', Buffer.from(message));
     return { message: 'Hello from Gateway!' };
 });
 
-fastify.setErrorHandler((error, request, reply) => {
-    request.log.error(error);
-    reply.status(500).send({ error: 'Internal Server Error' });
+fastify.setErrorHandler((error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
+    if (error instanceof Error) {
+        request.log.error(error);
+        reply.status(500).send({ error: 'Internal Server Error' });
+    } else {
+        request.log.error('An unknown error occurred');
+        reply.status(500).send({ error: 'Internal Server Error' });
+    }
 });
 
 const start = async () => {
     try {
-        await fastify.listen({ port: 3000, host: '0.0.0.0' });
-        fastify.log.info(`Server listening on ${fastify.server.address().port}`);
+        await connectRabbitMQ();
+        await fastify.listen({ port: 3002, host: '0.0.0.0' });
+
+        const address = fastify.server.address();
+        if (address && typeof address === 'object') {
+            fastify.log.info(`Server listening on ${address.port}`);
+        } else {
+            fastify.log.info(`Server listening`);
+        }
     } catch (err) {
-        fastify.log.error(err);
+        if (err instanceof Error) {
+            fastify.log.error(err);
+        } else {
+            fastify.log.error('Unknown error occurred during startup');
+        }
         process.exit(1);
     }
 };

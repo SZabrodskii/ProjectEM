@@ -14,9 +14,11 @@
   "description": "",
   "dependencies": {
     "@fastify/swagger": "^8.15.0",
+    "amqplib": "^0.10.4",
     "fastify": "^4.28.1"
   },
   "devDependencies": {
+    "@types/amqplib": "^0.10.5",
     "@types/node": "^22.5.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"

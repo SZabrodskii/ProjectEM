@@ -13,6 +13,14 @@ services:
     networks:
       - app-network
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - app-network
+
   action-history-service:
     build:
       context: ./services/action-history-service
@@ -20,6 +28,7 @@ services:
       - "3001:3001"
     depends_on:
       - postgres
+      - rabbitmq
     networks:
       - app-network
 
@@ -30,6 +39,7 @@ services:
       - "3000:3000"
     depends_on:
       - postgres
+      - rabbitmq
     networks:
       - app-network
 
@@ -41,6 +51,7 @@ services:
     depends_on:
       - action-history-service
       - inventory-service
+      - rabbitmq
     networks:
       - app-network
 
