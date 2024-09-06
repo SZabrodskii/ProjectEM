@@ -2,7 +2,7 @@ const amqplib = require('amqplib');
 
 const connectRabbitMQ = async () => {
     try {
-        const connection = await amqplib.connect('amqp://rabbitmq');
+        const connection = await amqplib.connect('amqp://rabbitmq:5672');
         const channel = await connection.createChannel();
         await channel.assertQueue('action-history', { durable: false });
 

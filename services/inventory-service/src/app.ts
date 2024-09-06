@@ -1,9 +1,8 @@
 import Fastify from 'fastify';
 import amqplib from 'amqplib';
 import { ProductService } from './services/product.service';
-import { StockService } from './services/stock.service';
-import { productRoutes } from './controllers/product.controller';
-import { stockRoutes } from './controllers/stock.controller';
+import * as process from "process";
+import {ProductController} from "./controllers/product.controller";
 
 const fastify = Fastify({
     logger: true,
@@ -21,16 +20,12 @@ const connectRabbitMQ = async () => {
             setTimeout(connectRabbitMQ, 1000);
         });
         channel = await connection.createChannel();
-        await channel.assertQueue('action-history', { durable: false });
-        fastify.log.info('Queue assertion successful.');
-        channel.consume('action-history', (msg) => {
-            if (msg) {
-                const message = msg.content.toString();
-                fastify.log.info(`Received message from RabbitMQ: ${message}`);
-                handleActionHistoryMessage(message);
-            }
-        }, { noAck: true });
-    } catch (error) {
+
+        // const productService = new ProductService();
+        // // const stockService = new StockService();
+        // const productController = new ProductController(productService, channel);
+
+    }catch (error) {
         if (error instanceof Error) {
             fastify.log.error('Failed to connect to RabbitMQ:', error.message);
             setTimeout(connectRabbitMQ, 1000); // Повторная попытка через 1 сек
@@ -40,20 +35,6 @@ const connectRabbitMQ = async () => {
     }
 };
 
-const handleActionHistoryMessage = (message: string) => {
-    fastify.log.info(`Processing message: ${message}`);
-    const productService = new ProductService();
-    productService.processMessage(message);
-};
-
-const productService = new ProductService();
-const stockService = new StockService();
-
-// Регистрация маршрутов
-fastify.register(async (instance) => {
-    productRoutes(instance, productService);
-    stockRoutes(instance, stockService);
-});
 
 const start = async () => {
     try {

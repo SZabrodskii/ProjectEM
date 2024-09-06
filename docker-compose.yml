@@ -42,6 +42,8 @@ services:
       - rabbitmq
     networks:
       - app-network
+    volumes:
+      - ./services/inventory-service/src:/usr/src/app/src
 
   gateway:
     build:
