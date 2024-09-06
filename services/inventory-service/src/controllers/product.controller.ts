@@ -1,17 +1,14 @@
 import { FastifyInstance } from 'fastify';
 import { ProductService } from '../services/product.service';
-import { Product } from '../models/product.model';
 
-export function productRoutes(fastify: FastifyInstance, productService: ProductService) {
-    fastify.post('/products/create', async (request, reply) => {
-        const { plu, name } = request.body as { plu: string; name: string };
-        const product = await productService.createProduct({ plu, name });
+export const productRoutes = (fastify: FastifyInstance, productService: ProductService) => {
+    fastify.get('/products', async (request, reply) => {
+        return productService.getProducts();
+    });
+
+    fastify.post('/products', async (request, reply) => {
+        const product = await productService.createProduct(request.body);
         return product;
     });
 
-    fastify.get('/products', async (request, reply) => {
-        const { name, plu } = request.query as { name?: string; plu?: string };
-        const products = await productService.findProducts({ name, plu });
-        return products;
-    });
-}
+};

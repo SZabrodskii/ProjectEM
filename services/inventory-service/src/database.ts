@@ -1,14 +1,24 @@
-import { DataSource } from 'typeorm';
-import { Product } from './models/product.model';
+import { DataSource, DataSourceOptions } from 'typeorm';
 import { Stock } from './models/stock.model';
+import { Product } from './models/product.model';
 
-export const AppDataSource = new DataSource({
+const options: DataSourceOptions = {
     type: 'postgres',
     host: 'postgres',
     port: 5432,
     username: 'admin',
     password: 'postgres',
     database: 'project_em',
-    entities: [Product, Stock],
+    entities: [Stock, Product],
     synchronize: true,
-});
+} as DataSourceOptions;
+
+export const AppDataSource = new DataSource(options);
+
+AppDataSource.initialize()
+    .then(() => {
+        console.log('Data Source has been initialized!');
+    })
+    .catch((error) => {
+        console.error('Error during Data Source initialization:', error);
+    });
