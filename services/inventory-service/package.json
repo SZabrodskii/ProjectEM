@@ -27,5 +27,16 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
   },
-  "description": ""
+  "nodemonConfig": {
+    "ignore": [
+      "**/test/**",
+      "**/docs/**"
+    ],
+    "delay": 2500,
+    "watch": [
+      "src"
+    ],
+    "ext": "ts",
+    "exec": "ts-node"
+  }
 }

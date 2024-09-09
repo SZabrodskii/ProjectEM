@@ -2,24 +2,28 @@ import { getRepository } from 'typeorm';
 import { Product } from '../models/product.model';
 
 export class ProductService {
-    private productRepository = getRepository(Product);
+  private productRepository = getRepository(Product);
 
-    async createProduct(productData: { plu: string; name: string }) {
-        const product = this.productRepository.create(productData);
-        return this.productRepository.save(product);
+  async createProduct(productData: { plu: string; name: string }) {
+    const product = this.productRepository.create(productData);
+    return this.productRepository.save(product);
+  }
+
+  async findProducts(filters: { name?: string; plu?: string }) {
+    const query = this.productRepository.createQueryBuilder('product');
+
+    if (filters.name) {
+      query.andWhere('product.name ILIKE :name', { name: `%${filters.name}%` });
     }
 
-    async findProducts(filters: { name?: string; plu?: string }) {
-        return this.productRepository.find({ where: filters });
+    if (filters.plu) {
+      query.andWhere('product.plu = :plu', { plu: filters.plu });
     }
 
-    async getProducts() {
-        return this.productRepository.find();
-    }
+    return query.getMany();
+  }
 
-    async processMessage(message: string) {
-        // Process the message received from RabbitMQ
-        // Example: Log the message or update database records based on message content
-        console.log(`Processing product message: ${message}`);
-    }
+  async getProducts() {
+    return this.productRepository.find();
+  }
 }

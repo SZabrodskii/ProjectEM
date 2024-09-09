@@ -24,30 +24,43 @@ services:
   action-history-service:
     build:
       context: ./services/action-history-service
-    ports:
-      - "3001:3001"
+      dockerfile: .docker/Dockerfile
     depends_on:
       - postgres
       - rabbitmq
     networks:
       - app-network
+    env_file:
+      - ./services/action-history-service/.env
+    volumes:
+      - ./services/action-history-service/src:/opt/app/src
+    command:
+      - npm
+      - run
+      - dev
 
   inventory-service:
     build:
       context: ./services/inventory-service
-    ports:
-      - "3000:3000"
+      dockerfile: .docker/Dockerfile
     depends_on:
       - postgres
       - rabbitmq
+    volumes:
+      - ./services/inventory-service/src:/opt/app/src
     networks:
       - app-network
-    volumes:
-      - ./services/inventory-service/src:/usr/src/app/src
+    env_file:
+      - ./services/inventory-service/.env
+    command:
+      - npm
+      - run
+      - dev
 
   gateway:
     build:
       context: ./services/gateway
+      dockerfile: .docker/Dockerfile
     ports:
       - "3002:3002"
     depends_on:
@@ -56,7 +69,14 @@ services:
       - rabbitmq
     networks:
       - app-network
+    volumes:
+      - ./services/gateway/src:/opt/app/src
+    env_file:
+      - ./services/gateway/.env
+    command:
+      - npm
+      - run
+      - dev
 
 networks:
   app-network:
-    driver: bridge

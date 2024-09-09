@@ -1,74 +1,76 @@
 import Fastify from 'fastify';
-import amqplib from 'amqplib';
+import * as amqplib from 'amqplib';
 import { ProductService } from './services/product.service';
+import { ProductController } from './controllers/product.controller';
+import { AppDataSource } from './database';
 import * as process from "process";
-import {ProductController} from "./controllers/product.controller";
 
-const fastify = Fastify({
-    logger: true,
-});
+const fastify = Fastify({ logger: true });
 
-let channel: amqplib.Channel;
+const startApp = async () => {
+  await AppDataSource.initialize();
 
-const connectRabbitMQ = async () => {
-    try {
-        fastify.log.info('Attempting to connect to RabbitMQ...');
-        const connection = await amqplib.connect('amqp://rabbitmq:5672');
-        fastify.log.info('Connected to RabbitMQ successfully.');
-        connection.on('close', () => {
-            fastify.log.warn('Connection to RabbitMQ closed. Attempting to reconnect...');
-            setTimeout(connectRabbitMQ, 1000);
-        });
-        channel = await connection.createChannel();
+  const channel = await connectRabbitMQ();
 
-        // const productService = new ProductService();
-        // // const stockService = new StockService();
-        // const productController = new ProductController(productService, channel);
+  const productService = new ProductService();
+  const productController = new ProductController(productService, channel);
 
-    }catch (error) {
-        if (error instanceof Error) {
-            fastify.log.error('Failed to connect to RabbitMQ:', error.message);
-            setTimeout(connectRabbitMQ, 1000); // Повторная попытка через 1 сек
-        } else {
-            fastify.log.error('Failed to connect to RabbitMQ:', 'Unknown error');
-        }
-    }
+  fastify.post('/products', (request, reply) => productController.createProduct(request, reply));
+  fastify.get('/products', (request, reply) => productController.getProducts(request, reply));
+
+  productController.consumeMessages();
+
+  try {
+    await fastify.listen({ port: 3000 });
+    console.log('Server is running on http://localhost:3000');
+  } catch (err) {
+    fastify.log.error(err);
+    process.exit(1);
+  }
 };
+
+// Функция подключения к RabbitMQ
+const connectRabbitMQ = async () => {
+  while (true) {
+    try {
+      const connection = await amqplib.connect('amqp://rabbitmq:5672');
+      connection.on('close', () => setTimeout(connectRabbitMQ, 1000));
+
+      const channel = await connection.createChannel();
+      await channel.assertQueue('action-history', { durable: true });
+
+      return channel;
+    } catch (error) {
+      console.error('Failed to connect to RabbitMQ. Retrying in 1 second...', error);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+};
+
+startApp();
 
 
 const start = async () => {
-    try {
-        await connectRabbitMQ();
-        await fastify.listen({ port: 3001, host: '0.0.0.0' });
+  try {
+    await connectRabbitMQ().then(channel => {
+      // const ps = new ProductService()
+      const pc = new ProductController(channel);
 
-        const address = fastify.server.address();
-        if (address && typeof address === 'object') {
-            fastify.log.info(`Server listening on ${address.port}`);
-        } else {
-            fastify.log.info(`Server listening`);
+      return channel
+    }).then(channel => {
+      process.on('SIGINT', async () => {
+        await channel.close();
+
+        try {
+          process.exit(0);
+        } catch (err) {
+          process.exit(1);
         }
-    } catch (err) {
-        if (err instanceof Error) {
-            fastify.log.error(err);
-        } else {
-            fastify.log.error('Unknown error occurred during startup');
-        }
-        process.exit(1);
-    }
+      });
+    });
+  } catch (err) {
+    process.exit(1);
+  }
 };
-
-process.on('SIGINT', async () => {
-    fastify.log.info('Received SIGINT. Shutting down...');
-    try {
-        if (channel) {
-            await channel.close();
-            fastify.log.info('RabbitMQ channel closed.');
-        }
-        process.exit(0);
-    } catch (err) {
-        fastify.log.error('Error during shutdown:', err);
-        process.exit(1);
-    }
-});
 
 start();

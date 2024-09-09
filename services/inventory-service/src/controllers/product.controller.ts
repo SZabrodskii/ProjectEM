@@ -1,29 +1,41 @@
-import { FastifyInstance } from 'fastify';
 import { ProductService } from '../services/product.service';
-import amqplib from "amqplib";
-
-// export const productRoutes = (fastify: FastifyInstance, productService: ProductService) => {
-//     fastify.get('/products', async (request, reply) => {
-//         return productService.getProducts();
-//     });
-//
-//     fastify.post('/products', async (request, reply) => {
-//         const product = await productService.createProduct(request.body);
-//         return product;
-//     });
-//
-// };
+import { FastifyRequest, FastifyReply } from 'fastify';
+import amqplib from 'amqplib';
 
 export class ProductController {
+  constructor(private productService: ProductService, private channel: amqplib.Channel) {}
 
+  async createProduct(request: FastifyRequest, reply: FastifyReply) {
+    const productData = request.body as { plu: string; name: string };
+    try {
+      const product = await this.productService.createProduct(productData);
 
-    constructor(private productService: ProductService, private channel: amqplib.Channel) {
-        this.channel.consume('action-history', (msg) => {
-            if (msg) {
-                const message = msg.content.toString();
-                console.log(msg)
+      const message = JSON.stringify({ action: 'CREATE_PRODUCT', product });
+      this.channel.sendToQueue('action-history', Buffer.from(message));
 
-            }
-        }, { noAck: true });
+      return reply.send(product);
+    } catch (error) {
+      return reply.status(500).send({ error: 'Failed to create product' });
     }
+  }
+
+  async getProducts(request: FastifyRequest, reply: FastifyReply) {
+    const filters = request.query as { name?: string; plu?: string };
+    try {
+      const products = await this.productService.findProducts(filters);
+      return reply.send(products);
+    } catch (error) {
+      return reply.status(500).send({ error: 'Failed to get products' });
+    }
+  }
+
+
+  consumeMessages() {
+    this.channel.consume('action-history', (msg) => {
+      if (msg) {
+        const message = msg.content.toString();
+        console.log('Received message:', message);
+      }
+    }, { noAck: true });
+  }
 }
