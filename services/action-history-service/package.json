@@ -13,10 +13,14 @@
   "description": "",
   "dependencies": {
     "amqplib": "^0.10.4",
+    "dotenv": "^16.4.5",
     "fastify": "^4.28.1",
     "pg": "^8.12.0",
+    "pg-hstore": "^2.3.4",
     "reflect-metadata": "^0.2.2",
-    "typeorm": "^0.3.20"
+    "sequelize": "^6.37.3",
+    "typeorm": "^0.3.20",
+    "winston": "^3.14.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.4",
@@ -24,8 +28,14 @@
     "typescript": "^5.5.4"
   },
   "nodemonConfig": {
-    "ignore": ["**/test/**", "**/docs/**"],
+    "ignore": [
+      "**/test/**",
+      "**/docs/**"
+    ],
     "delay": 2500,
-    "watch": ["src", "src/app.js"]
+    "watch": [
+      "src",
+      "src/app.js"
+    ]
   }
 }
