@@ -22,6 +22,7 @@
   "include": [
     "src/**/*.ts",
     "src/controllers/product.controller.ts",
+    "node_modules/@types/node/buffer.d.ts"
   ],
   "exclude": [
     "node_modules",

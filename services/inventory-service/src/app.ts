@@ -1,9 +1,12 @@
-import Fastify from 'fastify';
+import * as Fastify from 'fastify';
 import * as amqplib from 'amqplib';
 import { ProductService } from './services/product.service';
 import { ProductController } from './controllers/product.controller';
 import { AppDataSource } from './database';
 import * as process from "process";
+import {StockController} from "./controllers/stock.controller";
+import {StockService} from "./services/stock.service";
+import {FastifyReply, FastifyRequest} from "fastify";
 
 const fastify = Fastify({ logger: true });
 
@@ -11,12 +14,21 @@ const startApp = async () => {
   await AppDataSource.initialize();
 
   const channel = await connectRabbitMQ();
+  console.log('Connected to RabbitMQ');
 
   const productService = new ProductService();
   const productController = new ProductController(productService, channel);
+  const stockService = new StockService();
+  const stockController = new StockController(stockService, channel);
 
-  fastify.post('/products', (request, reply) => productController.createProduct(request, reply));
-  fastify.get('/products', (request, reply) => productController.getProducts(request, reply));
+  fastify.post('/products', (request: FastifyRequest, reply: FastifyReply) => productController.createProduct(request, reply));
+  fastify.get('/products', (request: FastifyRequest, reply: FastifyReply) => productController.getProducts(request, reply));
+
+  fastify.post('/stocks', (request: FastifyRequest, reply: FastifyReply) => stockController.createStock(request, reply));
+  fastify.put('/stocks/increase', (request: FastifyRequest, reply: FastifyReply) => stockController.increaseStock(request, reply));
+  fastify.put('/stocks/decrease', (request: FastifyRequest, reply: FastifyReply) => stockController.decreaseStock(request, reply));
+  fastify.get('/stocks', (request: FastifyRequest, reply: FastifyReply) => stockController.getStocks(request, reply));
+
 
   productController.consumeMessages();
 
@@ -29,7 +41,6 @@ const startApp = async () => {
   }
 };
 
-// Функция подключения к RabbitMQ
 const connectRabbitMQ = async () => {
   while (true) {
     try {
@@ -53,8 +64,8 @@ startApp();
 const start = async () => {
   try {
     await connectRabbitMQ().then(channel => {
-      // const ps = new ProductService()
-      const pc = new ProductController(channel);
+      const ps = new ProductService()
+      const pc = new ProductController(ps, channel);
 
       return channel
     }).then(channel => {

@@ -22,3 +22,18 @@ AppDataSource.initialize()
     .catch((error) => {
         console.error('Error during Data Source initialization:', error);
     });
+
+const connectToDatabase = async () => {
+  while (true) {
+    try {
+      await AppDataSource.initialize();
+      console.log('Connected to the database');
+      break;
+    } catch (error) {
+      console.error('Failed to connect to the database. Retrying in 1 second...', error);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+};
+
+connectToDatabase();
