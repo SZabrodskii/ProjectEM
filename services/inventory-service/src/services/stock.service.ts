@@ -1,15 +1,20 @@
-import { getRepository } from 'typeorm';
+import {DataSource, getRepository, Repository} from 'typeorm';
 import { Stock } from '../models/stock.model';
+import {StockDto, StockUpdateDto} from "../dtos/stock.dto";
 
 export class StockService {
-  private stockRepository = getRepository(Stock);
+  constructor(dataSource: DataSource) {
+    this.stockRepository = dataSource.getRepository(Stock);
+  }
+  private stockRepository: Repository<Stock>;
 
-  async createStock(stockData: { productId: number; shopId: number; quantityOnShelf: number; quantityInOrder: number }) {
+  async createStock(stockData: StockDto) {
     const stock = this.stockRepository.create(stockData);
     return this.stockRepository.save(stock);
   }
 
-  async changeStock(id: number, amount: number) {
+  async changeStock(stockData: StockUpdateDto) {
+    const { id, amount } = stockData;
     const stock = await this.stockRepository.findOne({ where: { id } });
     if (!stock) throw new Error('Stock not found');
 

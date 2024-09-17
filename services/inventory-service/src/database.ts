@@ -1,32 +1,28 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { Stock } from './models/stock.model';
 import { Product } from './models/product.model';
+import * as process from "process";
 
 const options: DataSourceOptions = {
+    name: 'default',
     type: 'postgres',
     host: 'postgres',
-    port: 5432,
-    username: 'admin',
-    password: 'postgres',
-    database: 'project_em',
+    port: parseInt(process.env.DB_PORT, 10) || 5432,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     entities: [Stock, Product],
     synchronize: true,
 } as DataSourceOptions;
 
-export const AppDataSource = new DataSource(options);
 
-AppDataSource.initialize()
-    .then(() => {
-        console.log('Data Source has been initialized!');
-    })
-    .catch((error) => {
-        console.error('Error during Data Source initialization:', error);
-    });
 
-const connectToDatabase = async () => {
+export const connectToDatabase = async () => {
+  const appDataSource = new DataSource(options);
   while (true) {
     try {
-      await AppDataSource.initialize();
+      await appDataSource.initialize();
+      return appDataSource;
       console.log('Connected to the database');
       break;
     } catch (error) {
@@ -36,4 +32,3 @@ const connectToDatabase = async () => {
   }
 };
 
-connectToDatabase();

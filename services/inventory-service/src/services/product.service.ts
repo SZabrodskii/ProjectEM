@@ -1,10 +1,14 @@
-import { getRepository } from 'typeorm';
+import {DataSource, getRepository, Repository} from 'typeorm';
 import { Product } from '../models/product.model';
+import {ProductDto} from "../dtos/product.dto";
 
 export class ProductService {
-  private productRepository = getRepository(Product);
+  constructor(dataSource: DataSource) {
+    this.productRepository = dataSource.getRepository(Product);
+  }
+  private productRepository: Repository<Product>
 
-  async createProduct(productData: { plu: string; name: string }) {
+  async createProduct(productData: ProductDto) {
     const product = this.productRepository.create(productData);
     return this.productRepository.save(product);
   }

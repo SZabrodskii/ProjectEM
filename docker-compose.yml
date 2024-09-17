@@ -13,21 +13,12 @@ services:
     networks:
       - app-network
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    networks:
-      - app-network
-
   action-history-service:
     build:
       context: ./services/action-history-service
       dockerfile: .docker/Dockerfile
     depends_on:
       - postgres
-      - rabbitmq
     networks:
       - app-network
     env_file:
@@ -45,7 +36,6 @@ services:
       dockerfile: .docker/Dockerfile
     depends_on:
       - postgres
-      - rabbitmq
     volumes:
       - ./services/inventory-service/src:/opt/app/src
     networks:
@@ -66,7 +56,6 @@ services:
     depends_on:
       - action-history-service
       - inventory-service
-      - rabbitmq
     networks:
       - app-network
     volumes:
