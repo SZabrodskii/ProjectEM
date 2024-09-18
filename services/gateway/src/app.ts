@@ -16,6 +16,25 @@ app.get('/products', async (request, reply) => {
   return reply
 });
 
+app.get('/stocks', async (request, reply) => {
+  await axios.get(`${inventoryServiceUrl}/stocks`).then(response => {
+    reply.send(response.data);
+  }).catch (error =>  {
+    reply.status(500).send({ error: error.message });
+  })
+});
+
+// Маршрут для изменения запасов (increase/decrease)
+app.post('/stocks/update', async (request, reply) => {
+  try {
+    const response = await axios.post(`${inventoryServiceUrl}/stocks/update`, request.body);
+    reply.send(response.data);
+  } catch (error) {
+    reply.status(500).send({ error: error.message });
+  }
+});
+
+// Маршрут для создания нового действия в action-history-service
 app.post('/actions', async (request, reply) => {
   try {
     const response = await axios.post(`${actionHistoryServiceUrl}/actions`, request.body);
@@ -25,6 +44,7 @@ app.post('/actions', async (request, reply) => {
   }
 });
 
+// Маршрут для получения всех действий из action-history-service
 app.get('/actions', async (request, reply) => {
   try {
     const response = await axios.get(`${actionHistoryServiceUrl}/actions`);
