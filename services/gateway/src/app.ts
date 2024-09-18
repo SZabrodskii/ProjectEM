@@ -1,24 +1,43 @@
 import fastify from 'fastify';
-import axios from 'axios';
+import axios, {formToJSON} from 'axios';
 import * as process from "process";
 
 const app = fastify({ logger: true });
 const inventoryServiceUrl = process.env.INVENTORY_SERVICE_URL || 'http://inventory-service:3000';
+const actionHistoryServiceUrl = process.env.ACTION_HISTORY_SERVICE_URL || 'http://action-history-service:3000';
 
 // Пример маршрута для получения всех продуктов
 app.get('/products', async (request, reply) => {
+  await axios.get(`${inventoryServiceUrl}/products`).then(response => {
+    reply.send(response.data)
+  }).catch(error => {
+    reply.status(500).send({error: error.message})
+  })
+  return reply
+});
+
+app.post('/actions', async (request, reply) => {
   try {
-    const response = await axios.get(`${inventoryServiceUrl}/products`);
+    const response = await axios.post(`${actionHistoryServiceUrl}/actions`, request.body);
     reply.send(response.data);
   } catch (error) {
-    reply.status(500).send({ message: 'Ошибка при запросе к inventory-service' });
+    reply.status(500).send({ error: error.message });
+  }
+});
+
+app.get('/actions', async (request, reply) => {
+  try {
+    const response = await axios.get(`${actionHistoryServiceUrl}/actions`);
+    reply.send(response.data);
+  } catch (error) {
+    reply.status(500).send({ error: error.message });
   }
 });
 
 const startApp = async () => {
   try {
-    await app.listen({ port: 3002 });
-    console.log('Gateway is running on http://localhost:3002');
+    await app.listen({host: "0.0.0.0", port: 3000 });
+    console.log('Gateway is running on http://localhost:3000');
   } catch (err) {
     app.log.error(err);
     process.exit(1);
