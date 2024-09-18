@@ -1,5 +1,5 @@
-require('dotenv').config(); // Подключаем dotenv
-import { Sequelize } from 'sequelize';
+require('dotenv').config();
+const {Sequelize} = require('sequelize')
 
 export const sequelize = new Sequelize(
   process.env.DB_NAME || 'action_history',

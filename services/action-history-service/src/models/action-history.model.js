@@ -1,5 +1,5 @@
-import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '../database';
+const { DataTypes, Model } = require('sequelize');
+const { sequelize } = require('../database');
 
 class ActionHistory extends Model {}
 

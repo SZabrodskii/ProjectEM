@@ -1,5 +1,5 @@
-import { FastifyInstance } from 'fastify';
-import ActionHistory from './models/action-history.model';
+const{ FastifyInstance } = require('fastify');
+const ActionHistory = require('./models/action-history.model');
 
 export const registerRoutes = (fastify: FastifyInstance) => {
   fastify.get('/action-history', async (request, reply) => {
