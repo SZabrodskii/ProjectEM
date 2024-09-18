@@ -1,33 +1,33 @@
-import {DataSource, getRepository, Repository} from 'typeorm';
+import { DataSource } from 'typeorm';
+import { ProductDto, ProductFilterDto } from '../dtos/product.dto';
 import { Product } from '../models/product.model';
-import {ProductDto} from "../dtos/product.dto";
 
 export class ProductService {
-  constructor(dataSource: DataSource) {
-    this.productRepository = dataSource.getRepository(Product);
-  }
-  private productRepository: Repository<Product>
+  constructor(private dataSource: DataSource) {}
 
-  async createProduct(productData: ProductDto) {
-    const product = this.productRepository.create(productData);
-    return this.productRepository.save(product);
+  async createProduct(productData: ProductDto): Promise<Product> {
+    const productRepo = this.dataSource.getRepository(Product);
+    const newProduct = productRepo.create(productData);
+    return await productRepo.save(newProduct);
   }
 
-  async findProducts(filters: { name?: string; plu?: string }) {
-    const query = this.productRepository.createQueryBuilder('product');
+  async findProducts(filters: ProductFilterDto): Promise<Product[]> {
+    const productRepo = this.dataSource.getRepository(Product);
+
+    const query = productRepo.createQueryBuilder('product');
 
     if (filters.name) {
-      query.andWhere('product.name ILIKE :name', { name: `%${filters.name}%` });
+      query.andWhere('product.name LIKE :name', { name: `%${filters.name}%` });
     }
 
-    if (filters.plu) {
-      query.andWhere('product.plu = :plu', { plu: filters.plu });
+    if (filters.minPrice) {
+      query.andWhere('product.price >= :minPrice', { minPrice: filters.minPrice });
     }
 
-    return query.getMany();
-  }
+    if (filters.maxPrice) {
+      query.andWhere('product.price <= :maxPrice', { maxPrice: filters.maxPrice });
+    }
 
-  async getProducts() {
-    return this.productRepository.find();
+    return await query.getMany();
   }
 }

@@ -11,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - app-network
+      - app_network
 
   action-history-service:
     build:
@@ -20,7 +20,7 @@ services:
     depends_on:
       - postgres
     networks:
-      - app-network
+      - app_network
     env_file:
       - ./services/action-history-service/.env
     volumes:
@@ -39,7 +39,7 @@ services:
     volumes:
       - ./services/inventory-service/src:/opt/app/src
     networks:
-      - app-network
+      - app_network
     env_file:
       - ./services/inventory-service/.env
     command:
@@ -52,12 +52,15 @@ services:
       context: ./services/gateway
       dockerfile: .docker/Dockerfile
     ports:
-      - "3002:3002"
+      - "3000:3000"
+    environment:
+      INVENTORY_SERVICE_URL: 'http://inventory-service:3000'
+      ACTION_HISTORY_SERVICE_URL: 'http://action-history-service:3000'
     depends_on:
       - action-history-service
       - inventory-service
     networks:
-      - app-network
+      - app_network
     volumes:
       - ./services/gateway/src:/opt/app/src
     env_file:
@@ -68,4 +71,9 @@ services:
       - dev
 
 networks:
-  app-network:
+  app_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.1.0/24

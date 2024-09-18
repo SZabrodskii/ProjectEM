@@ -1,14 +1,19 @@
-import {Product} from "../models/product.model";
-
 export class StockDto {
-  id: number;
-  product: Product
-  shopId: number;
-  quantityOnShelf: number;
-  quantityInOrder: number;
+  productId: number;
+  quantity: number;
+
+  constructor(productId: number, quantity: number) {
+    this.productId = productId;
+    this.quantity = quantity;
+  }
 }
 
 export class StockUpdateDto {
-  id: number;
-  amount: number;
+  productId: number;
+  quantityChange: number;
+
+  constructor(productId: number, quantityChange: number) {
+    this.productId = productId;
+    this.quantityChange = quantityChange;
+  }
 }

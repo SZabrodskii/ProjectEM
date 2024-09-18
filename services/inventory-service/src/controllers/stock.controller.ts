@@ -1,7 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { StockService } from '../services/stock.service';
-import { Buffer } from 'buffer'
-import {StockDto, StockUpdateDto} from "../dtos/stock.dto";
+import { StockDto, StockUpdateDto } from '../dtos/stock.dto';
 
 export class StockController {
   constructor(private stockService: StockService) {}
@@ -11,7 +10,6 @@ export class StockController {
 
     try {
       const stock = await this.stockService.createStock(stockData);
-
       return reply.send(stock);
     } catch (error) {
       return reply.status(500).send({ error: 'Failed to create stock' });
@@ -33,7 +31,7 @@ export class StockController {
     const stockData = <StockUpdateDto> request.body;
 
     try {
-      const updatedStock = await this.stockService.changeStock(stockData);
+      const updatedStock = await this.stockService.changeStock(stockData, 'decrease');
       return reply.send(updatedStock);
     } catch (error) {
       return reply.status(500).send({ error: 'Failed to decrease stock' });
@@ -41,10 +39,8 @@ export class StockController {
   }
 
   async getStocks(request: FastifyRequest, reply: FastifyReply) {
-    const filters = request.query;
-
     try {
-      const stocks = await this.stockService.findStocks(filters);
+      const stocks = await this.stockService.findStocks();
       return reply.send(stocks);
     } catch (error) {
       return reply.status(500).send({ error: 'Failed to get stocks' });
