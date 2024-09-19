@@ -1,12 +1,11 @@
 import fastify from 'fastify';
-import axios, {formToJSON} from 'axios';
+import axios from 'axios';
 import * as process from "process";
 
 const app = fastify({ logger: true });
 const inventoryServiceUrl = process.env.INVENTORY_SERVICE_URL || 'http://inventory-service:3000';
 const actionHistoryServiceUrl = process.env.ACTION_HISTORY_SERVICE_URL || 'http://action-history-service:3000';
 
-// Пример маршрута для получения всех продуктов
 app.get('/products', async (request, reply) => {
   await axios.get(`${inventoryServiceUrl}/products`).then(response => {
     reply.send(response.data)
@@ -24,7 +23,6 @@ app.get('/stocks', async (request, reply) => {
   })
 });
 
-// Маршрут для изменения запасов (increase/decrease)
 app.post('/stocks/update', async (request, reply) => {
   try {
     const response = await axios.post(`${inventoryServiceUrl}/stocks/update`, request.body);
@@ -34,7 +32,6 @@ app.post('/stocks/update', async (request, reply) => {
   }
 });
 
-// Маршрут для создания нового действия в action-history-service
 app.post('/actions', async (request, reply) => {
   try {
     const response = await axios.post(`${actionHistoryServiceUrl}/actions`, request.body);
@@ -44,7 +41,6 @@ app.post('/actions', async (request, reply) => {
   }
 });
 
-// Маршрут для получения всех действий из action-history-service
 app.get('/actions', async (request, reply) => {
   try {
     const response = await axios.get(`${actionHistoryServiceUrl}/actions`);

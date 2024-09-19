@@ -11,9 +11,11 @@ export class StockDto {
 export class StockUpdateDto {
   productId: number;
   quantityChange: number;
+  shopId: number;
 
-  constructor(productId: number, quantityChange: number) {
+  constructor(productId: number, quantityChange: number, shopId: number) {
     this.productId = productId;
     this.quantityChange = quantityChange;
+    this.shopId = shopId;
   }
 }
