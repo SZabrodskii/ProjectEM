@@ -1,37 +1,22 @@
-const { DataTypes, Model } = require('sequelize');
+const { DataTypes } = require('sequelize');
 const { sequelize } = require('../database');
 
-class ActionHistory extends Model {}
-
-ActionHistory.init(
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    shop_id: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    plu: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    action: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    date: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
+const ActionHistory = sequelize.define('ActionHistory', {
+  action: {
+    type: DataTypes.STRING,
+    allowNull: false,
   },
-  {
-    sequelize,
-    tableName: 'action_histories',
-    timestamps: false,
+  timestamp: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
   }
-);
+}, {
+  tableName: 'action_history',
+  timestamps: false,
+});
 
-export default ActionHistory;
+module.exports = ActionHistory;
