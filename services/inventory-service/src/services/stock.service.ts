@@ -22,15 +22,15 @@ export class StockService {
 
   async increaseStock(stockUpdateData: StockUpdateDto): Promise<Stock> {
     const stockRepo = this.dataSource.getRepository(Stock);
+
     const stock = await stockRepo.findOne({
       where: {
-        productId: stockUpdateData.productId,
         shopId: stockUpdateData.shopId,
       },
       relations: ['product'],
     });
 
-    if (stock) {
+    if (stock && stock.product && stock.product.id === stockUpdateData.productId) {
       stock.quantityOnShelf += stockUpdateData.quantityChange;
       return await stockRepo.save(stock);
     } else {
@@ -40,15 +40,15 @@ export class StockService {
 
   async decreaseStock(stockUpdateData: StockUpdateDto): Promise<Stock> {
     const stockRepo = this.dataSource.getRepository(Stock);
+
     const stock = await stockRepo.findOne({
       where: {
-        productId: stockUpdateData.productId,
         shopId: stockUpdateData.shopId,
       },
       relations: ['product'],
     });
 
-    if (stock) {
+    if (stock && stock.product && stock.product.id === stockUpdateData.productId) {
       if (stock.quantityOnShelf >= stockUpdateData.quantityChange) {
         stock.quantityOnShelf -= stockUpdateData.quantityChange;
         return await stockRepo.save(stock);
@@ -59,6 +59,7 @@ export class StockService {
       throw new Error('Stock not found');
     }
   }
+
   async getStocks(filters: { productPlu?: string; shopId?: number; quantityOnShelfMin?: number; quantityOnShelfMax?: number; quantityInOrderMin?: number; quantityInOrderMax?: number }): Promise<Stock[]> {
     const stockRepo = this.dataSource.getRepository(Stock);
     const query = stockRepo.createQueryBuilder('stock');
@@ -69,16 +70,16 @@ export class StockService {
     if (filters.shopId) {
       query.andWhere('stock.shopId = :shopId', { shopId: filters.shopId });
     }
-    if (filters.quantityOnShelfMin !== undefined) {
+    if (typeof filters.quantityOnShelfMin !== undefined) {
       query.andWhere('stock.quantityOnShelf >= :quantityOnShelfMin', { quantityOnShelfMin: filters.quantityOnShelfMin });
     }
-    if (filters.quantityOnShelfMax !== undefined) {
+    if (typeof filters.quantityOnShelfMax !== undefined) {
       query.andWhere('stock.quantityOnShelf <= :quantityOnShelfMax', { quantityOnShelfMax: filters.quantityOnShelfMax });
     }
-    if (filters.quantityInOrderMin !== undefined) {
+    if (typeof filters.quantityInOrderMin !== undefined) {
       query.andWhere('stock.quantityInOrder >= :quantityInOrderMin', { quantityInOrderMin: filters.quantityInOrderMin });
     }
-    if (filters.quantityInOrderMax !== undefined) {
+    if (typeof filters.quantityInOrderMax !== undefined) {
       query.andWhere('stock.quantityInOrder <= :quantityInOrderMax', { quantityInOrderMax: filters.quantityInOrderMax });
     }
 

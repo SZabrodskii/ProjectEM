@@ -10,7 +10,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 const fastify = Fastify({ logger: true });
 
 const startApp = async () => {
-  const dataSource = await connectToDatabase();
+  const dataSource = await connectToDatabase(fastify);
 
   const productService = new ProductService(dataSource);
   const productController = new ProductController(productService);
@@ -27,7 +27,7 @@ const startApp = async () => {
 
   try {
     await fastify.listen({ host: "0.0.0.0", port: 3000 });
-    console.log('Server is running on http://localhost:3000');
+    fastify.log.info('Server is running on http://localhost:3000');
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

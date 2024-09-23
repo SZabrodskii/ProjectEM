@@ -5,19 +5,16 @@ import { StockDto, StockUpdateDto } from '../dtos/stock.dto';
 export class StockController {
   constructor(private stockService: StockService) {}
 
-  async createStock(request: FastifyRequest<{ Body: StockDto }>, reply: FastifyReply) {
-    const stockData = request.body;
-
-    try {
-      const stock = await this.stockService.createStock(stockData);
-      return reply.send(stock);
-    } catch (error) {
-      return reply.status(500).send({ error: error.message || 'Failed to create stock' });
-    }
+  async createStock(request: FastifyRequest, reply: FastifyReply) {
+    await this.stockService.createStock(<StockDto>request.body).then(stock => {
+      reply.send(stock);
+    }).catch(error => {
+      reply.status(500).send({error: error})
+    });
   }
 
-  async increaseStock(request: FastifyRequest<{ Body: StockUpdateDto }>, reply: FastifyReply) {
-    const stockData = request.body;
+  async increaseStock(request: FastifyRequest, reply: FastifyReply) {
+    const stockData = <StockUpdateDto> request.body;
 
     try {
       const updatedStock = await this.stockService.increaseStock(stockData);
@@ -27,8 +24,8 @@ export class StockController {
     }
   }
 
-  async decreaseStock(request: FastifyRequest<{ Body: StockUpdateDto }>, reply: FastifyReply) {
-    const stockData = request.body;
+  async decreaseStock(request: FastifyRequest, reply: FastifyReply) {
+    const stockData = <StockUpdateDto> request.body;
 
     try {
       const updatedStock = await this.stockService.decreaseStock(stockData);
@@ -39,13 +36,15 @@ export class StockController {
   }
 
   async getStocks(request: FastifyRequest, reply: FastifyReply) {
-    const filters = request.query as any; // или можешь определить интерфейс для фильтров
+    const filters = request.query as any;
 
     try {
       const stocks = await this.stockService.getStocks(filters);
+
       return reply.send(stocks);
     } catch (error) {
-      return reply.status(500).send({ error: error.message || 'Failed to get stocks' });
+      request.log.error(request);
+      return reply.status(500).send({ error: 'Failed to get stocks' });
     }
   }
 }

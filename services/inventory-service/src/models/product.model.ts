@@ -1,13 +1,15 @@
-import {Column, Entity, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
 
 @Entity()
 export class Product {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @Column()
   plu: string;
 
+  @Index()
   @Column()
   name: string;
 }
